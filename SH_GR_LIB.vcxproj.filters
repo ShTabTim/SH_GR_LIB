@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="sh_win\handle.cpp">
+      <Filter>sh_win</Filter>
+    </ClCompile>
+    <ClCompile Include="sh_win\shwin.cpp">
+      <Filter>sh_win</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="sh_win">
+      <UniqueIdentifier>{9ed7454d-e980-4c87-ad57-b22fa67e588c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sh_win\handle.h">
+      <Filter>sh_win</Filter>
+    </ClInclude>
+    <ClInclude Include="sh_win\shwin.h">
+      <Filter>sh_win</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
