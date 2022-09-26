@@ -194,6 +194,7 @@ void handle::rect(int32_t cx, int32_t cy, int32_t dx, int32_t dy, uint32_t hex) 
 			draw(cx + x, cy + y, hex);
 #undef __sign__
 }
+
 void handle::rect2p(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t hex) {
 #define __sign__(a00) ((a00)?(((a00)>0)?1:-1):0)
 	x1 -= x0;
