@@ -16,6 +16,11 @@ typedef struct handle {
 
 	inline void draw(int32_t x, int32_t y, uint32_t argb);
 
+	void clear(uint32_t hex);
 	void line(int32_t cx, int32_t cy, int32_t dx, int32_t dy, uint32_t hex);
+	void line2p(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t hex);
 	void ring(int32_t cx, int32_t cy, uint32_t r, uint32_t hex);
+	void circ(int32_t cx, int32_t cy, uint32_t r, uint32_t hex);
+	void rect(int32_t cx, int32_t cy, int32_t dx, int32_t dy, uint32_t hex);
+	void rect2p(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t hex);
 } handle;

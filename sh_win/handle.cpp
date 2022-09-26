@@ -19,19 +19,23 @@ inline void handle::draw(int32_t x, int32_t y, uint32_t argb) {
 	handle[x+y*width] = col3(argb);
 }
 
+void handle::clear(uint32_t hex) {
+	for (uint32_t i(width* height); i--; handle[i] = col3(hex));
+}
+
 void handle::line(int32_t cx, int32_t cy, int32_t dx, int32_t dy, uint32_t hex) {
 #define __max__(a00, b00) (((a00) > (b00)) ? (a00) : (b00))
-#define __sign__(a00) (((a00)>0)-((a00)<0))
-#define __abs__(a00) (((a00)>0)?(a00):(-a00))
+#define __sign__(a00) ((a00)?(((a00)>0)?1:-1):0)
+#define __abs__(a00) (((a00)<0)?(-a00):(a00))
 
 	//x's defs
-	int32_t dir_x = __sign__(dx);
+	int8_t dir_x = __sign__(dx);
 	uint32_t del_x = __abs__(dx);
 	uint32_t erx = 0;
 	int32_t x = 0;
 
 	//y's defs
-	int32_t dir_y = __sign__(dy);
+	int8_t dir_y = __sign__(dy);
 	uint32_t del_y = __abs__(dy);
 	uint32_t ery = 0;
 	int32_t y = 0;
@@ -42,36 +46,63 @@ void handle::line(int32_t cx, int32_t cy, int32_t dx, int32_t dy, uint32_t hex) 
 	while (x != dx && y != dy) {
 		draw(cx + x, cy + y, hex);
 
-		__asm {
-//x movement
-			mov eax, erx
-			add eax, del_x
+		//x movement
+		erx += del_x;
+		if (erx >= max_del) {
+			erx -= max_del;
+			x += dir_x;
+		}
 
-			cmp eax, max_del
-			jb erx_less_or_equal_max_del
+		//y movement
+		ery += del_y;
+		if (ery >= max_del) {
+			ery -= max_del;
+			y += dir_y;
+		}
+	}
+#undef __max__
+#undef __sign__
+#undef __abs__
+}
 
-				sub eax, max_del
-				mov ebx, x
-				add ebx, dir_x
-				mov x, ebx
+void handle::line2p(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t hex) {
+#define __max__(a00, b00) (((a00) > (b00)) ? (a00) : (b00))
+#define __sign__(a00) ((a00)?(((a00)>0)?1:-1):0)
+#define __abs__(a00) (((a00)<0)?(-a00):(a00))
 
-			erx_less_or_equal_max_del :
-			mov erx, eax
-		
-//y movement
-			mov eax, ery
-			add eax, del_y
 
-			cmp eax, max_del
-			jb ery_less_or_equal_max_del
+	//x's defs
+	x1 -= x0;
+	int8_t dir_x = __sign__(x1);
+	uint32_t del_x = __abs__(x1);
+	x1 += x0;
+	uint32_t erx = 0;
 
-				sub eax, max_del
-				mov ebx, y
-				add ebx, dir_y
-				mov y, ebx
+	//y's defs
+	y1 -= y0;
+	int8_t dir_y = __sign__(y1);
+	uint32_t del_y = __abs__(y1);
+	y1 += y0;
+	uint32_t ery = 0;
 
-			ery_less_or_equal_max_del :
-			mov ery, eax
+	//max variation
+	uint32_t max_del = __max__(del_x, del_y);
+
+	while (x0 != x1 && y0 != y1) {
+		draw(x0, y0, hex);
+
+		//x movement
+		erx += del_x;
+		if (erx >= max_del) {
+			erx -= max_del;
+			x0 += dir_x;
+		}
+
+		//y movement
+		ery += del_y;
+		if (ery >= max_del) {
+			ery -= max_del;
+			y0 += dir_y;
 		}
 	}
 #undef __max__
@@ -80,12 +111,13 @@ void handle::line(int32_t cx, int32_t cy, int32_t dx, int32_t dy, uint32_t hex) 
 }
 
 void handle::ring(int32_t cx, int32_t cy, uint32_t r, uint32_t hex) {
+#define __y_from_x__(x00, r00) ((r00) - ((((x00) * (x00) * ((((r00) * (r00))<<2) + (x00) * (x00))) / ((r00) * (r00) * (r00))) >> 3))
 	if (!r) {
 		draw(cx, cy, hex);
 		return;
 	}
 	uint32_t x(0), y(r);
-	while (x <= y) {
+	while (x < y) {
 		//draws 8 parts of the ring
 		draw(cx + x, cy + y, hex);
 		draw(cx + x, cy - y, hex);
@@ -98,6 +130,82 @@ void handle::ring(int32_t cx, int32_t cy, uint32_t r, uint32_t hex) {
 		
 		x++;
 		//O(x^6) power series approximation of sqrt(r^2 - x^2)
-		y = r - (x*x*(4*r*r + x*x))/(r*r*r*8);
+		y = __y_from_x__(x, r);
 	}
+	if (x != y) return;
+	draw(cx + x, cy + x, hex);
+	draw(cx + x, cy - x, hex);
+	draw(cx - x, cy + x, hex);
+	draw(cx - x, cy - x, hex);
+
+#undef __y_from_x__
+}
+
+void handle::circ(int32_t cx, int32_t cy, uint32_t r, uint32_t hex) {
+#define __y_from_x__(x00, r00) ((r00) - ((((x00) * (x00) * ((((r00) * (r00))<<2) + (x00) * (x00))) / ((r00) * (r00) * (r00))) >> 3))
+	draw(cx, cy, hex);
+	if (!r)	return;
+	for (uint32_t m(1); m <= r; m++) {
+		draw(cx, cy + m, hex);
+		draw(cx, cy - m, hex);
+	}
+	uint32_t x(1), y(__y_from_x__(x, r));
+	while (x < y) {
+		draw(cx + x, cy, hex);
+		draw(cx - x, cy, hex);
+		draw(cx + y, cy, hex);
+		draw(cx - y, cy, hex);
+		for (uint32_t m(1); m <= y; m++) {
+			draw(cx + x, cy + m, hex);
+			draw(cx + x, cy - m, hex);
+			draw(cx - x, cy + m, hex);
+			draw(cx - x, cy - m, hex);
+		}
+		for (uint32_t n(1); n <= x; n++) {
+			draw(cx + y, cy + n, hex);
+			draw(cx + y, cy - n, hex);
+			draw(cx - y, cy + n, hex);
+			draw(cx - y, cy - n, hex);
+		}
+		x++;
+		//O(x^6) power series approximation of sqrt(r^2 - x^2)
+		y = __y_from_x__(x, r);
+	}
+	if (x != y) return;
+	draw(cx + x, cy, hex);
+	draw(cx - x, cy, hex);
+	for (uint32_t m(1); m <= x; m++) {
+		draw(cx + x, cy + m, hex);
+		draw(cx + x, cy - m, hex);
+		draw(cx - x, cy + m, hex);
+		draw(cx - x, cy - m, hex);
+	}
+#undef __y_from_x__
+}
+
+void handle::rect(int32_t cx, int32_t cy, int32_t dx, int32_t dy, uint32_t hex) {
+#define __sign__(a00) ((a00)?(((a00)>0)?1:-1):0)
+	int8_t dir_x = __sign__(dx);
+	int8_t dir_y = __sign__(dy);
+	dx += dir_x;
+	dy += dir_y;
+	for (int32_t x(0); x != dx; x += dir_x)
+		for (int32_t y(0); y != dy; y += dir_y)
+			draw(cx + x, cy + y, hex);
+#undef __sign__
+}
+void handle::rect2p(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t hex) {
+#define __sign__(a00) ((a00)?(((a00)>0)?1:-1):0)
+	x1 -= x0;
+	int8_t dir_x = __sign__(x1);
+	x1 += x0 + dir_x;
+
+	y1 -= y0;
+	int8_t dir_y = __sign__(y1);
+	y1 += y0 + dir_y;
+
+	for (; x0 != x1; x0 += dir_x)
+		for (int32_t y(y0); y != y1; y += dir_y)
+			draw(x0, y, hex);
+#undef __sign__
 }

@@ -19,8 +19,8 @@ Global
 		{3401DC98-E252-4963-9CAD-E649D307FA0C}.Debug|x86.Build.0 = Debug|Win32
 		{3401DC98-E252-4963-9CAD-E649D307FA0C}.Release|x64.ActiveCfg = Release|x64
 		{3401DC98-E252-4963-9CAD-E649D307FA0C}.Release|x64.Build.0 = Release|x64
-		{3401DC98-E252-4963-9CAD-E649D307FA0C}.Release|x86.ActiveCfg = Release|Win32
-		{3401DC98-E252-4963-9CAD-E649D307FA0C}.Release|x86.Build.0 = Release|Win32
+		{3401DC98-E252-4963-9CAD-E649D307FA0C}.Release|x86.ActiveCfg = Release|x64
+		{3401DC98-E252-4963-9CAD-E649D307FA0C}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
