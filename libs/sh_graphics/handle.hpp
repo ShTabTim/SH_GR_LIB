@@ -16,7 +16,7 @@ typedef struct handle {
 
 	void init(uint32_t width, uint32_t height);
 
-	inline void draw(int32_t x, int32_t y, uint32_t argb);
+	void draw(int32_t x, int32_t y, uint32_t argb);
 
 	void clear(uint32_t hex);
 	void line(int32_t cx, int32_t cy, int32_t dx, int32_t dy, uint32_t hex);

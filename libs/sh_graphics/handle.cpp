@@ -14,7 +14,7 @@ inline void handle::draw_in_handle(uint32_t id, uint32_t argb) {
 	handle[id] = col3(argb);
 }
 
-inline void handle::draw(int32_t x, int32_t y, uint32_t argb) {
+void handle::draw(int32_t x, int32_t y, uint32_t argb) {
 	if (x < 0 || x >= width || y < 0 || y >= height) return;
 	handle[x+y*width] = col3(argb);
 }
