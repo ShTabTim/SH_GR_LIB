@@ -1,4 +1,4 @@
-#include "shwin.h"
+#include "shwin.hpp"
 
 LRESULT CALLBACK win_proc(HWND hwin, UINT uimsg, WPARAM wparam, LPARAM lparam) {
 	shwin* wnd = (shwin*)GetWindowLongPtr(hwin, GWLP_USERDATA);
@@ -44,23 +44,24 @@ void shwin::init(HINSTANCE hinst, std::wstring name, void (*rend)(shwin*), uint3
 	this->width = width;
 	this->height = height;
 
+	WNDCLASSEXW wc;
+    ZeroMemory(&wc, sizeof(wc));
+	
+    wc.cbSize = sizeof(wc);
 	wc.style = CS_OWNDC;
 	wc.lpfnWndProc = win_proc;
-	wc.cbClsExtra = NULL;
-	wc.cbWndExtra = NULL;
 	wc.hInstance = hinst;
 	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-	wc.lpszMenuName = NULL;
 	wc.lpszClassName = win_name.c_str() + 1;
 
-	if (!RegisterClass(&wc)) {
-		MessageBox(NULL, L"Register class failed!", L"Oh, no!", MB_ERR_INVALID_CHARS);
+	if (!RegisterClassExW(&wc)) {
+		MessageBoxW(NULL, L"Register class failed!", L"Oh, no!", MB_ERR_INVALID_CHARS);
 		PostQuitMessage(0);
 	}
 
-	win = CreateWindow(
+	win = CreateWindowW(
 		wc.lpszClassName,
 		win_name.c_str(),
 		WS_OVERLAPPEDWINDOW,
@@ -69,7 +70,7 @@ void shwin::init(HINSTANCE hinst, std::wstring name, void (*rend)(shwin*), uint3
 		NULL, NULL, hinst, NULL);
 
 	if (!win) {
-		MessageBox(NULL, L"hwnd failed!", L"Oh, no!", MB_ERR_INVALID_CHARS);
+		MessageBoxW(NULL, L"hwnd failed!", L"Oh, no!", MB_ERR_INVALID_CHARS);
 		PostQuitMessage(0);
 	}
 

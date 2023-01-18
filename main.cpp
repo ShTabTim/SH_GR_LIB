@@ -1,8 +1,8 @@
 #include <Windows.h>
 #include <ctime>
 
-#include "sh_win/handle.h"
-#include "sh_win/shwin.h"
+#include <handle.hpp>
+#include <shwin.hpp>
 
 handle hd;
 shwin wnd;
@@ -32,7 +32,7 @@ void rend(shwin* wnd) {
 
 	uint32_t dt = comp_mspf();
 	std::wstring s = L" ms to frame: " + std::to_wstring(dt) + L" mspf, speed: " + std::to_wstring(1000.0f/dt) + L" fps ";
-	TextOut(wnd->hdc, 0, 0, s.c_str(), s.length());
+	TextOutW(wnd->hdc, 0, 0, s.c_str(), s.length());
 }
 
 int WinMain(HINSTANCE hinst, HINSTANCE prev_hinst, LPSTR cmd_line, int show_cmd) {
