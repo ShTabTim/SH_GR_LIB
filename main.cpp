@@ -18,7 +18,7 @@ unsigned long comp_mspf() {
 
 void rend(shwin* wnd) {
 	hd.clear(0xFF00000F);
-	for (uint32_t u(64); u--;) {
+	for (uint32_t u(32); u--;) {
 		hd.circ(rand() % hd.width, rand() % hd.height, 64 + rand() % 64, 0xFF000000 + 0x00FFFF00 & (rand()));
 		hd.rect(rand() % hd.width, rand() % hd.height, 64 + rand() % 64, 64 + rand() % 64, 0xFF000000 + 0x00FFFF00 & (rand()));
 		uint32_t x = rand() % hd.width;
