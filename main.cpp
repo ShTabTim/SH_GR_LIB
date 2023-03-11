@@ -37,7 +37,7 @@ void rend(shwin* wnd) {
 
 int WinMain(HINSTANCE hinst, HINSTANCE prev_hinst, LPSTR cmd_line, int show_cmd) {
 
-	hd.init(3*480, 3*320);
+	hd.init(480, 320);
 	wnd.init(hinst, L"Graphics test", rend, 3*480, 3*320);
 	wnd.init_draw_area(hd.width, hd.height);
 	wnd.show_window(show_cmd);
