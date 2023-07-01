@@ -43,7 +43,7 @@ void handle::line(int32_t x, int32_t y, int32_t dx, int32_t dy, uint32_t hex) {
 	//max variation
 	uint32_t max_del = __max__(del_x, del_y);
 	
-	while (x != dx && y != dy) {
+	while (x != dx || y != dy) {
 		draw(x, y, hex);
 
 		//x movement
