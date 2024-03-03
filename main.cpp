@@ -1,17 +1,31 @@
 #include <Windows.h>
 
 #include <renderable.hpp>
+#include <chrono>
+#include <cwchar>
+#include <valarray>
 #include "painting/paintives.hpp"
 
 LRESULT CALLBACK win_proc(HWND hwin, UINT uimsg, WPARAM wparam, LPARAM lparam) {
+    static std::chrono::system_clock::time_point new_time = std::chrono::system_clock::now();
+    static std::chrono::system_clock::time_point old_time = new_time;
     renderable* pRenderable = (renderable*)GetWindowLongPtr(hwin, GWLP_USERDATA);
     switch (uimsg) {
         case WM_CLOSE:
             PostQuitMessage(0);
             break;
-        case WM_PAINT:
+        case WM_PAINT: {
+            new_time = std::chrono::system_clock::now();
+            double dt = std::chrono::duration_cast<std::chrono::nanoseconds>(new_time - old_time).count()*0.000000001;
+            old_time = new_time;
             pRenderable->draw();
-            break;
+
+            LPWSTR s = (LPWSTR) malloc(30 * sizeof(wchar_t));
+            swprintf_s(s, 64, L"%4.2f fps\0", 1.0/dt);
+
+            SetWindowTextW(hwin, s);
+            free(s);
+        }   break;
         case WM_SIZE:
             pRenderable->width = LOWORD(lparam);
             pRenderable->height = HIWORD(lparam);
@@ -22,20 +36,34 @@ LRESULT CALLBACK win_proc(HWND hwin, UINT uimsg, WPARAM wparam, LPARAM lparam) {
     return 0;
 }
 
+uint8_t3 simple_picture[] = {
+        {0xFF, 0xFF, 0xFF},{0xFF, 0xFF, 0xFF},{0x0F, 0x0F, 0x0F},{0x0F, 0x0F, 0x0F},{0x0F, 0x0F, 0x0F},{0x0F, 0x0F, 0x0F},{0xFF, 0xFF, 0xFF},{0xFF, 0xFF, 0xFF},
+        {0xFF, 0xFF, 0xFF},{0x0F, 0x0F, 0x0F},{0x00, 0xFF, 0xFF},{0x00, 0xFF, 0xFF},{0x00, 0xFF, 0xFF},{0x00, 0xFF, 0xFF},{0x0F, 0x0F, 0x0F},{0xFF, 0xFF, 0xFF},
+        {0x0F, 0x0F, 0x0F},{0x00, 0xFF, 0xFF},{0x00, 0xFF, 0xFF},{0x00, 0x00, 0x00},{0x00, 0x00, 0x00},{0x00, 0x00, 0x00},{0x00, 0xFF, 0xFF},{0x0F, 0x0F, 0x0F},
+        {0x0F, 0x0F, 0x0F},{0x00, 0xFF, 0xFF},{0x00, 0xFF, 0xFF},{0x00, 0xFF, 0xFF},{0x00, 0xFF, 0xFF},{0x00, 0xFF, 0xFF},{0x00, 0xFF, 0xFF},{0x0F, 0x0F, 0x0F},
+        {0x0F, 0x0F, 0x0F},{0x00, 0xFF, 0xFF},{0xFF, 0xFF, 0xFF},{0x00, 0x00, 0x00},{0x00, 0xFF, 0xFF},{0xFF, 0xFF, 0xFF},{0x00, 0x00, 0x00},{0x0F, 0x0F, 0x0F},
+        {0x0F, 0x0F, 0x0F},{0x00, 0xFF, 0xFF},{0xFF, 0xFF, 0xFF},{0xFF, 0xFF, 0xFF},{0x00, 0xFF, 0xFF},{0xFF, 0xFF, 0xFF},{0xFF, 0xFF, 0xFF},{0x0F, 0x0F, 0x0F},
+        {0xFF, 0xFF, 0xFF},{0x0F, 0x0F, 0x0F},{0x00, 0xFF, 0xFF},{0x00, 0xFF, 0xFF},{0x00, 0xFF, 0xFF},{0x00, 0xFF, 0xFF},{0x0F, 0x0F, 0x0F},{0xFF, 0xFF, 0xFF},
+        {0xFF, 0xFF, 0xFF},{0xFF, 0xFF, 0xFF},{0x0F, 0x0F, 0x0F},{0x0F, 0x0F, 0x0F},{0x0F, 0x0F, 0x0F},{0x0F, 0x0F, 0x0F},{0xFF, 0xFF, 0xFF},{0xFF, 0xFF, 0xFF},
+};
+
+drawable spt(simple_picture, 8, 8);
+
 void rend(renderable* rd) {
-    //paintives::clear(rd, {0, 0, 0x0F});
-    for(uint32_t j = 56; j--;)
-        rd->set_pixel(rand()%rd->drawable::width, rand()%rd->drawable::height, rand());
-    for (uint32_t u(32); u--;) {
-        paintives::line(rd, (rand() % rd->drawable::width), (rand() % rd->drawable::height), (rand() % rd->drawable::width), (rand() % rd->drawable::height), {(uint8_t)rand(), (uint8_t)rand(), (uint8_t)rand()});
+    paintives::clear(rd, {0, 0, 0x0F});
+
+    for (uint32_t u(10); u--;) {
         paintives::rect(rd, (rand() % rd->drawable::width), (rand() % rd->drawable::height), (rand() % rd->drawable::width), (rand() % rd->drawable::height), {(uint8_t)rand(), (uint8_t)rand(), (uint8_t)rand()});
+        paintives::line(rd, (rand() % rd->drawable::width), (rand() % rd->drawable::height), (rand() % rd->drawable::width), (rand() % rd->drawable::height), {(uint8_t)rand(), (uint8_t)rand(), (uint8_t)rand()});
+        rd->set_pixel(rand()%rd->drawable::width, rand()%rd->drawable::height, rand());
     }
+    paintives::sprite(rd, &spt, 80, 80, 141, 120);
 }
 
 int WinMain(HINSTANCE hinst, HINSTANCE prev_hinst, LPSTR cmd_line, int show_cmd) {
     renderable r;
 
-    r.init(512, 512, rend);
+    r.init(512, 512, rend, 256, 256);
 
     WNDCLASSEXW wcexw;
     ZeroMemory(&wcexw, sizeof(WNDCLASSEXW));

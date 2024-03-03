@@ -12,9 +12,9 @@ typedef struct renderable : public drawable {
     uint32_t height;
     BITMAPINFO buf_info;
     void (*rend)(renderable*);
-    void init(uint32_t width, uint32_t height, void (*rend)(renderable*));
+    void init(uint32_t width, uint32_t height, void (*rend)(renderable*), uint32_t drawable_width, uint32_t drawable_height);
     void draw();
-    void finit();
+    void finit() override;
 } renderable;
 
 #endif//__RENDERABLE_HPP__
