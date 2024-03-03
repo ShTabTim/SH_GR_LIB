@@ -1,55 +1,99 @@
 #include <Windows.h>
-#include <ctime>
 
-#include <handle.hpp>
-#include <shwin.hpp>
+#include <renderable.hpp>
+#include "painting/paintives.hpp"
 
-handle hd;
-shwin wnd;
-
-unsigned long comp_mspf() {
-	static unsigned long old_time = clock()-15, new_time = clock(), dt = 15;
-	new_time = clock();
-	dt += new_time - old_time;
-	dt >>= 1;
-	old_time = new_time;
-	return dt;
+LRESULT CALLBACK win_proc(HWND hwin, UINT uimsg, WPARAM wparam, LPARAM lparam) {
+    renderable* pRenderable = (renderable*)GetWindowLongPtr(hwin, GWLP_USERDATA);
+    switch (uimsg) {
+        case WM_CLOSE:
+            PostQuitMessage(0);
+            break;
+        case WM_PAINT:
+            pRenderable->draw();
+            break;
+        case WM_SIZE:
+            pRenderable->width = LOWORD(lparam);
+            pRenderable->height = HIWORD(lparam);
+            break;
+        default:
+            return DefWindowProcW(hwin, uimsg, wparam, lparam);
+    }
+    return 0;
 }
 
-void rend(shwin* wnd) {
-	hd.clear(0xFF00000F);
-	for (uint32_t u(32); u--;) {
-		hd.circ(rand() % hd.width, rand() % hd.height, 64 + rand() % 64, 0xFF000000 + 0x00FFFF00 & (rand()));
-		hd.rect(rand() % hd.width, rand() % hd.height, 64 + rand() % 64, 64 + rand() % 64, 0xFF000000 + 0x00FFFF00 & (rand()));
-		uint32_t x = rand() % hd.width;
-		uint32_t y = rand() % hd.height;
-		hd.rect2p(x, y, x + rand() % 128, y + rand() % 128, 0xFF000000 + 0x00FFFF00 & (rand()));
-		hd.ring(rand() % hd.width, rand() % hd.height, 64 + rand() % 64, 0xFF000000 + 0x00FFFF00 & (rand()));
-		hd.line(hd.width >> 1, hd.height >> 1, (rand() % hd.width) - (hd.width >> 1), (rand() % hd.height) - (hd.height >> 1), 0xFF000000 + 0x00FFFF00 & rand());
-		hd.line2p(hd.width >> 1, hd.height >> 1, (rand() % hd.width), (rand() % hd.height), 0xFF000000 + 0x00FFFF00 & rand());
-	}
-	StretchDIBits(wnd->hdc, 0, 0, wnd->width, wnd->height, 0, 0, hd.width, hd.height, hd.handle, &wnd->buf_info, DIB_RGB_COLORS, SRCCOPY);
-
-	uint32_t dt = comp_mspf();
-	std::wstring s = L" ms to frame: " + std::to_wstring(dt) + L" mspf, speed: " + std::to_wstring(1000.0f/dt) + L" fps ";
-	TextOutW(wnd->hdc, 0, 0, s.c_str(), s.length());
+void rend(renderable* rd) {
+    //paintives::clear(rd, {0, 0, 0x0F});
+    for(uint32_t j = 56; j--;)
+        rd->set_pixel(rand()%rd->drawable::width, rand()%rd->drawable::height, rand());
+    for (uint32_t u(32); u--;) {
+        paintives::line(rd, (rand() % rd->drawable::width), (rand() % rd->drawable::height), (rand() % rd->drawable::width), (rand() % rd->drawable::height), {(uint8_t)rand(), (uint8_t)rand(), (uint8_t)rand()});
+        paintives::rect(rd, (rand() % rd->drawable::width), (rand() % rd->drawable::height), (rand() % rd->drawable::width), (rand() % rd->drawable::height), {(uint8_t)rand(), (uint8_t)rand(), (uint8_t)rand()});
+    }
 }
 
 int WinMain(HINSTANCE hinst, HINSTANCE prev_hinst, LPSTR cmd_line, int show_cmd) {
+    renderable r;
 
-	hd.init(480, 320);
-	wnd.init(hinst, L"Graphics test", rend, 3*480, 3*320);
-	wnd.init_draw_area(hd.width, hd.height);
-	wnd.show_window(show_cmd);
+    r.init(512, 512, rend);
+
+    WNDCLASSEXW wcexw;
+    ZeroMemory(&wcexw, sizeof(WNDCLASSEXW));
+
+    wcexw.cbSize = sizeof(WNDCLASSEXW);
+    wcexw.style = CS_OWNDC;
+    wcexw.lpfnWndProc = win_proc;
+    wcexw.hInstance = hinst;
+    wcexw.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wcexw.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wcexw.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    wcexw.lpszClassName = L"GraphicWindowClass";
+    wcexw.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+
+
+    if (!RegisterClassExW(&wcexw)) {
+        MessageBoxW(NULL, L"Register class failed!", L"Oh, no!", MB_ERR_INVALID_CHARS);
+        PostQuitMessage(0);
+    }
+
+    HWND win = CreateWindowExW(0,
+            wcexw.lpszClassName,
+            L"GraphicWindow",
+            WS_OVERLAPPEDWINDOW,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            r.width, r.height,
+            NULL, NULL, hinst, NULL);
+
+    if (!win) {
+        MessageBoxW(NULL, L"hwnd failed!", L"Oh, no!", MB_ERR_INVALID_CHARS);
+        PostQuitMessage(0);
+    }
+
+    SetWindowLongPtr(win, GWLP_USERDATA, (LONG_PTR)&r);
+
+    r.hdc = GetDC(win);
+
+    RECT wRect, cRect;
+
+    GetWindowRect(win, &wRect);
+    GetClientRect(win, &cRect);
+
+    wRect.right = wRect.right - wRect.left + r.width - cRect.right;
+    wRect.bottom = wRect.bottom - wRect.top + r.height - cRect.bottom;
+
+    MoveWindow(win, wRect.left, wRect.top, wRect.right, wRect.bottom, false);
+    ShowWindow(win, show_cmd);
 
 	MSG msg;
 	do {
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+			DispatchMessageW(&msg);
 		}
-		RedrawWindow(wnd.win, NULL, NULL, RDW_INTERNALPAINT);
+		RedrawWindow(win, NULL, NULL, RDW_INTERNALPAINT);
 	} while (msg.message != WM_QUIT);
+
+    r.finit();
 
 	return msg.wParam;
 }
