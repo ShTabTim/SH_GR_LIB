@@ -8,7 +8,7 @@ namespace paintives {
             dr->data[k] = p;
     }
 
-    void line(drawable* dr, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint8_t3 p) {
+    void line(drawable* dr, int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint8_t3 p) {
         //x's defs
         int8_t dir_x = (x1 > x0) - (x0 > x1);
         uint32_t del_x = (x1 > x0) ? (x1-x0) : (x0-x1);
@@ -23,7 +23,8 @@ namespace paintives {
         uint32_t max_del = __max(del_x, del_y);
 
         for(uint32_t k = max_del; (x0!=x1)&&(y0!=y1)&&(k--);) {
-            dr->set_pixel(x0, y0, p);
+            if(x0 >= 0 && y0 >= 0 && x0 < dr->width && y0 < dr->height)
+                dr->set_pixel(x0, y0, p);
 
             //x movement
             erx += del_x;
@@ -72,10 +73,27 @@ namespace paintives {
                 dr->set_pixel(x0, y, p);
     }
 
-    ///TODO sprite out of dr
-    void sprite(drawable* dr, drawable* sprite, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1) {
+    void circ(drawable* dr, int32_t x0, int32_t y0, uint32_t r, uint8_t3 p) {
+        int32_t x = 0;
+        int32_t y = r;
+        int32_t delta = 3 - 2*r;
+        while (y >= x) {
+            dr->stupid_set_pixel(x0 + x, y0 + y, p);
+            dr->stupid_set_pixel(x0 + x, y0 - y, p);
+            dr->stupid_set_pixel(x0 - x, y0 + y, p);
+            dr->stupid_set_pixel(x0 - x, y0 - y, p);
+            dr->stupid_set_pixel(x0 + y, y0 + x, p);
+            dr->stupid_set_pixel(x0 + y, y0 - x, p);
+            dr->stupid_set_pixel(x0 - y, y0 + x, p);
+            dr->stupid_set_pixel(x0 - y, y0 - x, p);
+            delta += (delta < 0) ? (4*x+6):(4*(x-(y--))+10);
+            x++;
+        }
+    }
+
+    void sprite(drawable* dr, drawable* sprite, int32_t x0, int32_t y0, int32_t x1, int32_t y1) {
         {
-            uint32_t p;
+            int32_t p;
             if (x1 < x0) {
                 p = x0;
                 x0 = x1;
@@ -89,85 +107,46 @@ namespace paintives {
             }
             if (y1 < 0 || y0 >= dr->height) return;
         }
-        if ((sprite->width + x0) > x1) {
-            if ((sprite->height + y0) > y1) {
-            ///TODO normal algorithm
-                uint32_t dsx = (sprite->width-1)/(x1-x0), dsy = sprite->height/(y1-y0);
-                uint32_t x(x0), y;
-                for (;x <= x1;x++)
-                    for (y = y0; y<=y1; y++)
-                        dr->set_pixel(x, y, sprite->get_pixel((x-x0)*dsx, (y-y0)*dsy));
-            } else if  ((sprite->height + y0) < y1) {
-                uint32_t sy = y0;
+        if (sprite->width <= x1-x0) {
+            if (sprite->height <= y1-y0) {
+                uint32_t sx = 0, sy;
+                uint32_t del_sx = sprite->width;
+                uint32_t ersx = 0;
                 uint32_t del_sy = sprite->height;
-                uint32_t ersy = 0;
+                uint32_t ersy;
 
-                uint32_t del_x = x1-x0+1;
-                uint32_t erx;
-                uint32_t sx, x, y = y0;
-                uint32_t3 p;
-                uint32_t n;
-                for(; y <= y1; y++) {
-                    p = {0, 0, 0};
-                    n = 0;
-                    x = x0;
-                    erx = 0;
-                    sx = 0;
-                    for (; sx < sprite->width; sx++) {
-                        p = p + uint8_t3::uint8_t3_to_uint32_t3(sprite->get_pixel(sx, y));
-                        n++;
-                        erx += del_x;
-                        if (erx >= sprite->width) {
-                            dr->set_pixel(x, y, {(uint8_t)(p.r/n), (uint8_t)(p.g/n), (uint8_t)(p.b/n)});
-                            p = {0, 0, 0};
-                            n = 0;
-                            erx -= sprite->width;
-                            x++;
+                int32_t x(x0),y;
+                for(; x<= x1; x++) {
+
+                    sy = 0;
+                    ersy = 0;
+
+                    for(y = y0; y<= y1; y++) {
+                        dr->stupid_set_pixel(x, y, sprite->get_pixel(sx, sy));
+
+                        ersy += del_sy;
+                        if (ersy >= y1-y0+1) {
+                            ersy -= y1-y0+1;
+                            sy++;
                         }
                     }
 
-                    ersy += del_sy;
-                    if (y0 + ersy >= y1+1) {
-                        ersy += y0;
-                        ersy -= y1+1;
-                        sy++;
+                    ersx += del_sx;
+                    if (ersx >= x1-x0+1) {
+                        ersx -= x1-x0+1;
+                        sx++;
                     }
                 }
+
             } else {
-                uint32_t del_x = x1-x0+1;
-                uint32_t erx;
-                uint32_t sx, x, y = y0;
-                uint32_t3 p;
-                uint32_t n;
-                for(; y <= y1; y++) {
-                    p = {0, 0, 0};
-                    n = 0;
-                    x = x0;
-                    erx = 0;
-                    sx = 0;
-                    for (; sx < sprite->width; sx++) {
-                        p = p + uint8_t3::uint8_t3_to_uint32_t3(sprite->get_pixel(sx, y));
-                        n++;
-                        erx += del_x;
-                        if (erx >= sprite->width) {
-                            dr->set_pixel(x, y, {(uint8_t)(p.r/n), (uint8_t)(p.g/n), (uint8_t)(p.b/n)});
-                            p = {0, 0, 0};
-                            n = 0;
-                            erx -= sprite->width;
-                            x++;
-                        }
-                    }
-                }
-            }
-        } else if  ((sprite->width + x0) < x1) {
-            if ((sprite->height + y0) > y1) {
-                uint32_t sx = y0;
+                uint32_t sx = 0;
                 uint32_t del_sx = sprite->width;
                 uint32_t ersx = 0;
 
                 uint32_t del_y = y1-y0+1;
                 uint32_t ery;
-                uint32_t sy, y, x = x0;
+                uint32_t sy;
+                int32_t y, x = x0;
                 uint32_t3 p;
                 uint32_t n;
                 for(; x <= x1; x++) {
@@ -181,7 +160,7 @@ namespace paintives {
                         n++;
                         ery += del_y;
                         if (ery >= sprite->height) {
-                            dr->set_pixel(x, y, {(uint8_t)(p.r/n), (uint8_t)(p.g/n), (uint8_t)(p.b/n)});
+                            dr->stupid_set_pixel(x, y, {(uint8_t)(p.b/n), (uint8_t)(p.g/n), (uint8_t)(p.r/n)});
                             p = {0, 0, 0};
                             n = 0;
                             ery -= sprite->height;
@@ -190,108 +169,60 @@ namespace paintives {
                     }
 
                     ersx += del_sx;
-                    if (y0 + ersx >= x1+1) {
-                        ersx += x0;
-                        ersx -= x1+1;
-                        sx++;
-                    }
-                }
-            } else if  ((sprite->height + y0) < y1) {
-                uint32_t sx = 0, sy;
-                uint32_t del_sx = sprite->width;
-                uint32_t ersx = 0;
-                uint32_t del_sy = sprite->height;
-                uint32_t ersy;
-
-                uint32_t x(x0),y;
-                for(x; x<= x1; x++) {
-
-                    sy = 0;
-                    ersy = 0;
-
-                    for(y = y0; y<= y1; y++) {
-                        dr->set_pixel(x, y, sprite->get_pixel(sx, sy));
-
-                        ersy += del_sy;
-                        if (y0 + ersy >= y1+1) {
-                            ersy += y0;
-                            ersy -= y1+1;
-                            sy++;
-                        }
-                    }
-
-                    ersx += del_sx;
-                    if (x0 + ersx >= x1+1) {
-                        ersx += x0;
-                        ersx -= x1+1;
-                        sx++;
-                    }
-                }
-            } else {
-                uint32_t sx = x0;
-                uint32_t del_sx = sprite->width;
-                uint32_t ersx = 0;
-                uint32_t x(x0), y;
-                for (; x <= x1; x++) {
-                    for(y = y0; y <= y1; y++)
-                        dr->set_pixel(x, y, sprite->get_pixel(sx, y));
-
-                    ersx += del_sx;
-                    if (x0 + ersx >= x1+1) {
-                        ersx += x0;
-                        ersx -= x1+1;
+                    if (ersx >= x1-x0+1) {
+                        ersx -= x1-x0+1;
                         sx++;
                     }
                 }
             }
         } else {
-            if ((sprite->height + y0) > y1) {
-                uint32_t del_y = y1-y0+1;
-                uint32_t ery;
-                uint32_t sy, y, x = x0;
-                uint32_t3 p;
-                uint32_t n;
-                for(; x <= x1; x++) {
-                    p = {0, 0, 0};
-                    n = 0;
-                    y = y0;
-                    ery = 0;
-                    sy = 0;
-                    for (; sy < sprite->height; sy++) {
-                        p = p + uint8_t3::uint8_t3_to_uint32_t3(sprite->get_pixel(x, sy));
-                        n++;
-                        ery += del_y;
-                        if (ery >= sprite->height) {
-                            dr->set_pixel(x, y, {(uint8_t)(p.r/n), (uint8_t)(p.g/n), (uint8_t)(p.b/n)});
-                            p = {0, 0, 0};
-                            n = 0;
-                            ery -= sprite->height;
-                            y++;
-                        }
-                    }
-                }
-            } else if  ((sprite->height + y0) < y1) {
-                uint32_t sy = y0;
+            if (sprite->height <= y1-y0) {
+                uint32_t sy = 0;
                 uint32_t del_sy = sprite->height;
                 uint32_t ersy = 0;
 
-                uint32_t x, y(y0);
-                for (; y <= y1; y++) {
-                    for(x = x0; x <= x1; x++)
-                        dr->set_pixel(x, y, sprite->get_pixel(x, sy));
+                uint32_t del_x = x1-x0+1;
+                uint32_t erx;
+                uint32_t sx;
+                int32_t x, y = y0;
+                uint32_t3 p;
+                uint32_t n;
+                for(; y <= y1; y++) {
+                    p = {0, 0, 0};
+                    n = 0;
+                    x = x0;
+                    erx = 0;
+                    sx = 0;
+                    for (; sx < sprite->width; sx++) {
+                        p = p + uint8_t3::uint8_t3_to_uint32_t3(sprite->get_pixel(sx, sy));
+                        n++;
+                        erx += del_x;
+                        if (erx >= sprite->width) {
+                            dr->stupid_set_pixel(x, y, {(uint8_t)(p.b/n), (uint8_t)(p.g/n), (uint8_t)(p.r/n)});
+                            p = {0, 0, 0};
+                            n = 0;
+                            erx -= sprite->width;
+                            x++;
+                        }
+                    }
 
                     ersy += del_sy;
-                    if (y0 + ersy >= y1+1) {
-                        ersy += y0;
-                        ersy -= y1+1;
+                    if (ersy >= y1 - y0 + 1) {
+                        ersy -= y1-y0+1;
                         sy++;
                     }
                 }
+
             } else {
-                uint32_t x(x0), y;
+                ///TODO normal algorithm
+                uint32_t dsx = sprite->width/(x1-x0), dsy = sprite->height/(y1-y0);
+                x1 = __min(x1, dr->width-1);
+                y1 = __min(y1, dr->height-1);
+                uint32_t x(__max(x0, 0)), y, p = __max(y0, 0);
+
                 for (;x <= x1;x++)
-                    for (y = y0; y<=y1; y++)
-                        dr->set_pixel(x, y, sprite->get_pixel(x, y));
+                    for (y = p; y<=y1; y++)
+                        dr->set_pixel(x, y, sprite->get_pixel((x-x0)*dsx, (y-y0)*dsy));
             }
         }
     }
@@ -300,36 +231,6 @@ namespace paintives {
 
 
 /*
-void handle::ring(int32_t cx, int32_t cy, uint32_t r, uint32_t hex) {
-#define __y_from_x__(x00, r00) ((r00) - ((((x00) * (x00) * ((((r00) * (r00))<<2) + (x00) * (x00))) / ((r00) * (r00) * (r00))) >> 3))
-	if (!r) {
-		draw(cx, cy, hex);
-		return;
-	}
-	uint32_t x(0), y(r);
-	while (x < y) {
-		//draws 8 parts of the ring
-		draw(cx + x, cy + y, hex);
-		draw(cx + x, cy - y, hex);
-		draw(cx - x, cy + y, hex);
-		draw(cx - x, cy - y, hex);
-		draw(cx + y, cy + x, hex);
-		draw(cx + y, cy - x, hex);
-		draw(cx - y, cy + x, hex);
-		draw(cx - y, cy - x, hex);
-		
-		x++;
-		y = __y_from_x__(x, r);
-	}
-	if (x != y) return;
-	draw(cx + x, cy + x, hex);
-	draw(cx + x, cy - x, hex);
-	draw(cx - x, cy + x, hex);
-	draw(cx - x, cy - x, hex);
-
-#undef __y_from_x__
-}
-
 void handle::circ(int32_t cx, int32_t cy, uint32_t r, uint32_t hex) {
 #define __y_from_x__(x00, r00) ((r00) - ((((x00) * (x00) * ((((r00) * (r00))<<2) + (x00) * (x00))) / ((r00) * (r00) * (r00))) >> 3))
 	draw(cx, cy, hex);

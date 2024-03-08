@@ -61,6 +61,15 @@ void drawable::set_pixel(uint32_t x, uint32_t y, uint8_t3 p) {
     data[y*width+x] = p;
 }
 
+void drawable::stupid_set_pixel(uint32_t x, uint32_t y, uint8_t3 p) {
+    if(x < width && y < height)
+        data[y*width+x] = p;
+}
+
+void drawable::tor_set_pixel(int32_t x, int32_t y, uint8_t3 p) {
+    data[(y >= 0 ? y%height : height + y%height)*width+(x >= 0 ? x%width : width + x%width)] = p;
+}
+
 uint8_t3& drawable::pixel(uint32_t x, uint32_t y) {
     return data[y*width+x];
 }

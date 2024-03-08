@@ -50,20 +50,22 @@ uint8_t3 simple_picture[] = {
 drawable spt(simple_picture, 8, 8);
 
 void rend(renderable* rd) {
-    paintives::clear(rd, {0, 0, 0x0F});
+    paintives::sprite(rd, &spt, 0, 0, rd->drawable::width-1, rd->drawable::height-1);
 
     for (uint32_t u(10); u--;) {
         paintives::rect(rd, (rand() % rd->drawable::width), (rand() % rd->drawable::height), (rand() % rd->drawable::width), (rand() % rd->drawable::height), {(uint8_t)rand(), (uint8_t)rand(), (uint8_t)rand()});
         paintives::line(rd, (rand() % rd->drawable::width), (rand() % rd->drawable::height), (rand() % rd->drawable::width), (rand() % rd->drawable::height), {(uint8_t)rand(), (uint8_t)rand(), (uint8_t)rand()});
         rd->set_pixel(rand()%rd->drawable::width, rand()%rd->drawable::height, rand());
+        paintives::circ(rd, 70, 70, rand()%100, {0xFF, (uint8_t)rand(), 0xAA});
     }
-    paintives::sprite(rd, &spt, 80, 80, 141, 120);
+
+    paintives::sprite(rd, &spt, 80, 80, 87, 94);
 }
 
 int WinMain(HINSTANCE hinst, HINSTANCE prev_hinst, LPSTR cmd_line, int show_cmd) {
     renderable r;
 
-    r.init(512, 512, rend, 256, 256);
+    r.init(512, 512, rend, 128, 128);
 
     WNDCLASSEXW wcexw;
     ZeroMemory(&wcexw, sizeof(WNDCLASSEXW));

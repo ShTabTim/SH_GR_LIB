@@ -17,6 +17,8 @@ typedef struct drawable {
     uint8_t3 get_pixel(uint32_t index);
     void set_pixel(uint32_t x, uint32_t y, uint32_t p);
     void set_pixel(uint32_t x, uint32_t y, uint8_t3 p);
+    void stupid_set_pixel(uint32_t x, uint32_t y, uint8_t3 p);
+    void tor_set_pixel(int32_t x, int32_t y, uint8_t3 p);
     uint8_t3& pixel(uint32_t x, uint32_t y);
     uint8_t3& pixel(uint32_t index);
     virtual void finit();
