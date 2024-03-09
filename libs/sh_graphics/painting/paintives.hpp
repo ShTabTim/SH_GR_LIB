@@ -2,17 +2,17 @@
 #define __PAINTIVES_HPP__
 
 #include <cinttypes>
-
 #include "drawable.hpp"
-#include "uint_t3.hpp"
 
 namespace paintives {
-	void clear(drawable* dr, uint8_t3 p);
-	void line(drawable* dr, int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint8_t3 p);
-    void fast_rect(drawable* dr, int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint8_t3 p);
-    void rect(drawable* dr, int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint8_t3 p);
-    void circ(drawable* dr, int32_t x0, int32_t y0, uint32_t r, uint8_t3 p);
-    void sprite(drawable* dr, drawable* sprite, int32_t x0, int32_t y0, int32_t x1, int32_t y1);
+	template<typename color1, typename color2> extern void clear(drawable<color1>* dr, color2 p);
+    template<typename color1, typename color2> void line(drawable<color1>* dr, int32_t x0, int32_t y0, int32_t x1, int32_t y1, color2 p);
+    template<typename color1, typename color2> void fast_rect(drawable<color1>* dr, int32_t x0, int32_t y0, int32_t x1, int32_t y1, color2 p);
+    template<typename color1, typename color2> void rect(drawable<color1>* dr, int32_t x0, int32_t y0, int32_t x1, int32_t y1, color2 p);
+    template<typename color1, typename color2> void circ(drawable<color1>* dr, int32_t x0, int32_t y0, uint32_t r, color2 p);
+    template<typename color1, typename color2> void sprite(drawable<color1>* dr, drawable<color2>* sprite, int32_t x0, int32_t y0, int32_t x1, int32_t y1);
 }
+
+#include "paintives.tpp"
 
 #endif//__PAINTIVES_HPP__
